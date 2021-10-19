@@ -28,3 +28,6 @@ module.exports = {
       .then(message => module.exports.embededObj = message)
 	},
 };
+
+
+git config core.excludesfile ~/.env
