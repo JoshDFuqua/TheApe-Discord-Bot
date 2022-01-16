@@ -1,14 +1,14 @@
 const {MessageActionRow, MessageSelectMenu, MessageButton, MessageEmbed} = require('discord.js');
 const tiers = require('../tiers.js');
 require('dotenv').config({path: '../../.env'});
-const mysql = require('mysql');
-const connection = mysql.createConnection({
-  host : process.env.DBHOST,
-  user : process.env.DBUSER,
-  password : process.env.DBPASS,
-  database : process.env.DBNAME,
-  port: 3306
-});
+// const mysql = require('mysql');
+// const connection = mysql.createConnection({
+//   host : process.env.DBHOST,
+//   user : process.env.DBUSER,
+//   password : process.env.DBPASS,
+//   database : process.env.DBNAME,
+//   port: 3306
+// });
 
 module.exports = {
 	name: 'view_games',
