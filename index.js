@@ -2,7 +2,6 @@ const Discord = require('discord.js')
 const config = require('./config');
 const fs = require('fs');
 const client = new Discord.Client({
-  fetchAllMembers: false,
   intents: [
     Discord.Intents.FLAGS.GUILDS,
     Discord.Intents.FLAGS.GUILD_BANS,
@@ -20,10 +19,10 @@ const client = new Discord.Client({
   ],
   presence: {
     status: 'online',
-    activity: {
+    activities: [{
       name: 'you',
       type: 'WATCHING'
-    }
+    }]
   }
 });
 require('dotenv').config();
