@@ -72,18 +72,18 @@ client.on('messageCreate', async message => {
       client.commands.get(command).execute(message, args, client);
     } catch (error) {
       console.error(error);
-      message.reply('there was an error trying to execute that command!');
+      message.reply('There was an error trying to execute that command!');
     }
   }
 });
 
 client.on('interactionCreate', async button => {
-  let buttonID = button.customId
+  let buttonID = button.customId;
   if (!client.buttons.has(buttonID)) return;
   try {
-    client.buttons.get(buttonID).execute(button, client)
+    client.buttons.get(buttonID).execute(button, client);
   } catch (error) {
-    console.log(error)
+    console.log(error);
   }
 });
 
