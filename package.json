@@ -1,6 +1,9 @@
 {
   "name": "ape-bot",
   "version": "1.0.0",
+  "scripts": {
+    "start": "node index.js"
+  },
   "dependencies": {
     "mongodb": "^4.3.0",
     "axios": "^0.24.0",
