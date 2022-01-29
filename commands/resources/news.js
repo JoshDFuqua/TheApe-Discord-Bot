@@ -129,12 +129,9 @@ function getNews(message) {
   });
 };
 
-getNews()
-
 module.exports = {
   getNews
 }
-
 
 module.exports = {
   name: 'news',
