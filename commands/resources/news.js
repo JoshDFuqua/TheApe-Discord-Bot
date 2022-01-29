@@ -106,7 +106,7 @@ function getNews(message) {
       (async () => {
         const browser = await puppeteer.launch();
         const page = await browser.newPage();
-        await page.goto('file:///Users/joshfuqua/Discord Bot/todayStory.html');
+        await page.goto('file:////Discord Bot/commands/resources/todayStory.html');
         let posts = await page.$$('li');
 
         for (let i = 0; i < posts.length; i++) {

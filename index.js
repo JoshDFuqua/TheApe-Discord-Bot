@@ -89,7 +89,7 @@ client.on('interactionCreate', async button => {
 });
 
 
-let { getNews } = require('.commands/resources/news.js');
+let { getNews } = require('./commands/resources/news.js');
 let postNews = new CronJob('00 30 12 * * *', () => getNews(client))
 postNews.start();
 
