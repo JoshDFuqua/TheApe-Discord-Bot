@@ -27,6 +27,7 @@ const client = new Discord.Client({
 });
 require('dotenv').config();
 const token = process.env.TOKEN;
+const { CronJob } = require('cron');
 
 /*
  * Creates properties on the client object that contain access to the various command and button files
@@ -86,5 +87,11 @@ client.on('interactionCreate', async button => {
     console.log(error);
   }
 });
+
+
+let { getNews } = require('./news.js');
+let postNews = new CronJob('00 30 12 * * *', () => getNews(client))
+postNews.start();
+
 
 client.login(token);
