@@ -98,36 +98,42 @@ function getNews(message) {
 
       fs.writeFile('todayStory.html', doc, (err) => {
         if (err) console.log(err)
-      });
+        else {
+          let postArr = [];
 
-      const embed = new Discord.MessageEmbed()
-        .setTitle('Daily News');
+          (async () => {
+            const browser = await puppeteer.launch();
+            const page = await browser.newPage();
+            // await page.goto('file:///home/TheApe-Discord-Bot/commands/resources/todayStory.html');
+            await page.goto('file:///Users/joshfuqua/Discord Bot/commands/resources/todayStory.html');
+            let posts = await page.$$('li');
 
-      (async () => {
-        const browser = await puppeteer.launch();
-        const page = await browser.newPage();
-        await page.goto('file:////Discord Bot/commands/resources/todayStory.html');
-        let posts = await page.$$('li');
+            for (let i = 0; i < posts.length; i++) {
+              let postContent = `${await (await posts[i].getProperty('textContent')).jsonValue()}`;
+              let links = await posts[i].$$('a');
 
-        for (let i = 0; i < posts.length; i++) {
-          let postContent = `${await (await posts[i].getProperty('textContent')).jsonValue()}`;
-          let links = await posts[i].$$('a');
+              for (let j = 0; j < links.length; j++) {
+                let href = `${await (await links[j].getProperty('href')).jsonValue()}`;
+                let linkText = `${await (await links[j].getProperty('textContent')).jsonValue()}`;
 
-          for (let j = 0; j < links.length; j++) {
-            let href = `${await (await links[j].getProperty('href')).jsonValue()}`;
-            let linkText = `${await (await links[j].getProperty('textContent')).jsonValue()}`;
+                postContent = postContent.replace(linkText, `[${linkText}] (${href})`)
+              }
+              postArr.push({name: '----------', value: postContent})
+            }
+            await browser.close();
+          })();
+          let embed = new Discord.MessageEmbed()
+            .setTitle('Daily News')
+            .addFields(...postArr);
 
-            postContent = postContent.replace(linkText, `[${linkText}] (${href})`)
-          }
-          embed.addField('\u200B', postContent)
+          message.channel.send({content: null, embeds: [embed]})
         }
-        await browser.close();
-      })();
-      message.channel.send({content: null, embeds: [embed]})
-
+      });
     });
   });
 };
+
+getNews()
 
 module.exports = {
   getNews
