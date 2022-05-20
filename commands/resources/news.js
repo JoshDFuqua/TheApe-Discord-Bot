@@ -86,7 +86,12 @@ function getNews(client) {
             await browser.close();
             let embed = new Discord.MessageEmbed()
               .setTitle("Daily News")
-              .addFields(...postArr);
+              .addFields(...postArr)
+              .setFooter({
+                text: "News courtesy of The New Paper",
+                iconURL:
+                  "https://cdn.builder.io/api/v1/image/assets%2FdEjh2gs5h7b3cCl3oCR4dwZGjPr2%2Fdfb3347bb5934a5b8f2090c5915d6d2e?format=webp&width=1600&height=1200",
+              });
 
             channel.send({ content: null, embeds: [embed] });
           })();
