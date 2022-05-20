@@ -1,9 +1,9 @@
 module.exports = {
-  name: 'say',
-  description: 'Make the bot say something',
+  name: "say",
+  description: "Make the bot say something",
   execute(message, args) {
-    let response = [...args].join(' ')
+    let response = [...args].join(" ");
     message.delete();
-    message.channel.send({content: `${response}`, tts: true})
-  }
+    message.channel.send({ content: `${response}` });
+  },
 };
