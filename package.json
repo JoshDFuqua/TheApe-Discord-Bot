@@ -2,7 +2,8 @@
   "name": "ape-bot",
   "version": "1.0.0",
   "scripts": {
-    "start": "pm2 start index.js --name Discord_Bot"
+    "start": "pm2 start index.js --name Discord_Bot",
+    "stop": "pm2 stop Discord_Bot"
   },
   "dependencies": {
     "axios": "^0.24.0",
