@@ -24,15 +24,15 @@ module.exports = {
     if (!args.length) {
       embed.setDescription(
         Array.from(commands.keys())
-          .map(
-            (command) =>
-              `\`${command.padEnd(
+          .map((command) => {
+            if (command)
+              return `\`${command.padEnd(
                 Array.from(commands.keys).reduce(
                   (a, b) => (b.length > a.length ? b : a),
                   ""
                 ).length
-              )}\` :: ${commands.get(command).description}`
-          )
+              )}\` :: ${commands.get(command).description}`;
+          })
           .join("\n")
       );
     }
