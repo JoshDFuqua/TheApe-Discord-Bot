@@ -26,7 +26,12 @@ module.exports = {
         Array.from(commands.keys())
           .map(
             (command) =>
-              `\`${command}\` :: ${commands.get(command).description}`
+              `\`${command.padEnd(
+                Array.from(commands.keys).reduce(
+                  (a, b) => (b.length > a.length ? b : a),
+                  ""
+                ).length
+              )}\` :: ${commands.get(command).description}`
           )
           .join("\n")
       );
