@@ -170,7 +170,7 @@ function getNewToken(oAuth2Client, callback) {
 }
 
 module.exports = {
-  name: "getNews",
+  name: "news",
   execute(message, args, client) {
     getNews(client);
   },
