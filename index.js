@@ -96,16 +96,14 @@ client.on("interactionCreate", async (button) => {
   }
 });
 
-let { getNews } = require("./commands/resources/news.js");
-let postNews = new CronJob(
-  "00 00 12 * * 1-5", // Post Monday thru Friday, at 12pm
-  () => getNews(client),
-  null,
-  false,
-  "America/New_York"
-);
-postNews.start();
-
-getNews(client);
+// let { getNews } = require("./commands/resources/news.js");
+// let postNews = new CronJob(
+//   "00 00 12 * * 1-5", // Post Monday thru Friday, at 12pm
+//   () => getNews(client),
+//   null,
+//   false,
+//   "America/New_York"
+// );
+// postNews.start();
 
 client.login(token);
