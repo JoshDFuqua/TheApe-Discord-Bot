@@ -20,85 +20,83 @@ const savedHtmlLocation =
   ENVIRONMENT === "Local" ? localHtmlPath : serverHtmlPath;
 
 function getNews(client) {
-  let channel;
-
   client.channels
     .fetch("977325210376208415")
-    .then((fetchedChannel) => (channel = fetchedChannel))
-    .catch((err) => console.log(err));
+    .then((channel) => {
+      fs.readFile("credentials.json", (err, content) => {
+        if (err) return console.log("Error loading client secret file:", err);
+        authorize(JSON.parse(content), async (authorization) => {
+          channel.sendTyping();
 
-  fs.readFile("credentials.json", (err, content) => {
-    if (err) return console.log("Error loading client secret file:", err);
-    authorize(JSON.parse(content), async (authorization) => {
-      channel.sendTyping();
+          const gmail = google.gmail({ version: "v1", auth: authorization });
 
-      const gmail = google.gmail({ version: "v1", auth: authorization });
+          const res = await gmail.users.messages.list({
+            includeSpamTrash: false,
+            maxResults: 1,
+            q: "from:editors@thenewpaper.co",
+            userId: "me",
+          });
 
-      const res = await gmail.users.messages.list({
-        includeSpamTrash: false,
-        maxResults: 1,
-        q: "from:editors@thenewpaper.co",
-        userId: "me",
-      });
+          if (res.data.messages.length === 0) return;
 
-      if (res.data.messages.length === 0) return;
+          let msg = await gmail.users.messages.get({
+            format: "raw",
+            id: res.data.messages[0].id,
+            userId: "me",
+          });
 
-      let msg = await gmail.users.messages.get({
-        format: "raw",
-        id: res.data.messages[0].id,
-        userId: "me",
-      });
+          let doc = parseEmailToHTML(msg);
 
-      let doc = parseEmailToHTML(msg);
+          fs.writeFile("todayStory.html", doc, (err) => {
+            if (err) console.log(err);
+            else {
+              let postArr = [];
 
-      fs.writeFile("todayStory.html", doc, (err) => {
-        if (err) console.log(err);
-        else {
-          let postArr = [];
+              (async () => {
+                const browser = await puppeteer.launch();
+                const page = await browser.newPage();
+                await page.goto(savedHtmlLocation);
+                let posts = await page.$$("li");
 
-          (async () => {
-            const browser = await puppeteer.launch();
-            const page = await browser.newPage();
-            await page.goto(savedHtmlLocation);
-            let posts = await page.$$("li");
+                for (let i = 0; i < posts.length; i++) {
+                  let postContent = `${await (
+                    await posts[i].getProperty("textContent")
+                  ).jsonValue()}`;
+                  let links = await posts[i].$$("a");
 
-            for (let i = 0; i < posts.length; i++) {
-              let postContent = `${await (
-                await posts[i].getProperty("textContent")
-              ).jsonValue()}`;
-              let links = await posts[i].$$("a");
+                  for (let j = 0; j < links.length; j++) {
+                    let href = `${await (
+                      await links[j].getProperty("href")
+                    ).jsonValue()}`;
+                    let linkText = `${await (
+                      await links[j].getProperty("textContent")
+                    ).jsonValue()}`;
 
-              for (let j = 0; j < links.length; j++) {
-                let href = `${await (
-                  await links[j].getProperty("href")
-                ).jsonValue()}`;
-                let linkText = `${await (
-                  await links[j].getProperty("textContent")
-                ).jsonValue()}`;
+                    postContent = postContent.replace(
+                      linkText,
+                      `[${linkText}](${href} 'Click to read further')`
+                    );
+                  }
+                  postArr.push({ name: "----------", value: postContent });
+                }
+                await browser.close();
+                let embed = new Discord.MessageEmbed()
+                  .setTitle("Daily News")
+                  .addFields(...postArr)
+                  .setFooter({
+                    text: "News courtesy of The New Paper",
+                    iconURL:
+                      "https://cdn.builder.io/api/v1/image/assets%2FdEjh2gs5h7b3cCl3oCR4dwZGjPr2%2Fdfb3347bb5934a5b8f2090c5915d6d2e?format=webp&width=1600&height=1200",
+                  });
 
-                postContent = postContent.replace(
-                  linkText,
-                  `[${linkText}](${href} 'Click to read further')`
-                );
-              }
-              postArr.push({ name: "----------", value: postContent });
+                channel.send({ content: null, embeds: [embed] });
+              })();
             }
-            await browser.close();
-            let embed = new Discord.MessageEmbed()
-              .setTitle("Daily News")
-              .addFields(...postArr)
-              .setFooter({
-                text: "News courtesy of The New Paper",
-                iconURL:
-                  "https://cdn.builder.io/api/v1/image/assets%2FdEjh2gs5h7b3cCl3oCR4dwZGjPr2%2Fdfb3347bb5934a5b8f2090c5915d6d2e?format=webp&width=1600&height=1200",
-              });
-
-            channel.send({ content: null, embeds: [embed] });
-          })();
-        }
+          });
+        });
       });
-    });
-  });
+    })
+    .catch((err) => console.log(err));
 }
 
 /****************/
