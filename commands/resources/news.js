@@ -24,7 +24,6 @@ function getNews(client) {
   client.channels
     .fetch("977325210376208415")
     .then((channel) => {
-      if (!channel) return;
       fs.readFile("credentials.json", (err, content) => {
         if (err) return console.log("Error loading client secret file:", err);
         authorize(JSON.parse(content), async (authorization) => {
