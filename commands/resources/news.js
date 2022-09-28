@@ -171,5 +171,8 @@ function getNewToken(oAuth2Client, callback) {
 }
 
 module.exports = {
-  getNews,
+  name: "getNews",
+  execute(message, args, client) {
+    getNews(client);
+  },
 };
