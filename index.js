@@ -71,8 +71,19 @@ client.on("messageCreate", async (message) => {
   }
 });
 
+const lolStats = new SlashCommandBuilder()
+  .setName("lolstats")
+  .setDescription("View general stats from your previous 15 LoL matches")
+  .addStringOption((option) => {
+    option
+      .setName("summoner name")
+      .setDescription("name of the summoner you wish to see stats for")
+      .setRequired(true);
+  });
+
 client.on("interactionCreate", (interaction) => {
   if (!interaction.isChatInputCommand()) return;
+  if (interaction.commandName in client.commands) console.log(client.commands);
 });
 
 // let { getNews } = require("./commands/resources/news.js");

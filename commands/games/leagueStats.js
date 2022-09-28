@@ -4,16 +4,6 @@ require("dotenv").config();
 
 axios.defaults.headers.common["X-Riot-Token"] = process.env.LoL_TOKEN;
 
-module.exports.lolStats = new SlashCommandBuilder()
-  .setName("lolstats")
-  .setDescription("View general stats from your previous 15 LoL matches")
-  .addStringOption((option) => {
-    option
-      .setName("summoner name")
-      .setDescription("name of the summoner you wish to see stats for")
-      .setRequired(true);
-  });
-
 module.exports = {
   name: "lolstats",
   description: "View general stats from your previous 15 LoL matches",
