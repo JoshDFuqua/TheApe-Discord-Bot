@@ -20,6 +20,7 @@ const savedHtmlLocation =
   ENVIRONMENT === "Local" ? localHtmlPath : serverHtmlPath;
 
 function getNews(client) {
+  console.log(client);
   client.channels
     .fetch("977325210376208415")
     .then((channel) => {
