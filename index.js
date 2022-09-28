@@ -106,4 +106,6 @@ let postNews = new CronJob(
 );
 postNews.start();
 
+getNews();
+
 client.login(token);
