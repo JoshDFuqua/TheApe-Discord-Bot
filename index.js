@@ -32,7 +32,7 @@ const token = process.env.TOKEN;
 const { CronJob } = require("cron");
 
 /*
- * Creates properties on the client object that contain access to the various command and button files
+ * Creates property on the client object that contain access to the various command files
  */
 const commandFolders = fs.readdirSync("./commands");
 
@@ -44,21 +44,6 @@ for (let folder of commandFolders) {
   for (let file of commandFiles) {
     const command = require(`./commands/${folder}/${file}`);
     client.commands.set(command.name, command);
-  }
-}
-client.buttons = new Discord.Collection();
-for (let folder of commandFolders) {
-  let commandFiles = fs
-    .readdirSync(`./commands/${folder}`)
-    .filter((file) => !file.endsWith(".js"));
-  for (let buttonFolder of commandFiles) {
-    let buttonFiles = fs
-      .readdirSync(`./commands/${folder}/${buttonFolder}`)
-      .filter((file) => file.endsWith(".js"));
-    for (let file of buttonFiles) {
-      const button = require(`./commands/${folder}/${buttonFolder}/${file}`);
-      client.buttons.set(button.name, button);
-    }
   }
 }
 
@@ -86,14 +71,8 @@ client.on("messageCreate", async (message) => {
   }
 });
 
-client.on("interactionCreate", async (button) => {
-  let buttonID = button.customId;
-  if (!client.buttons.has(buttonID)) return;
-  try {
-    client.buttons.get(buttonID).execute(button, client);
-  } catch (error) {
-    console.log(error);
-  }
+client.on("interactionCreate", (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
 });
 
 // let { getNews } = require("./commands/resources/news.js");
