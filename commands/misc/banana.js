@@ -1,10 +1,9 @@
-module.exports = {
-  name: 'banana',
-  description: 'banana',
-  execute(message, args, client) {
-    if (message.author.id === client.user.id) return;
+import { SlashCommandBuilder } from "discord.js";
 
-    message.react('🍌');
-    message.channel.send({content: 'where banana', tts: true})
-  },
-};
+export const data = new SlashCommandBuilder().setName('banana').setDescription('banana')
+export function execute(message, args, client) {
+  if (message.author.id === client.user.id) return;
+
+  message.react('🍌');
+  message.channel.send({ content: 'where banana', tts: true });
+}
