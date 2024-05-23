@@ -9,31 +9,32 @@ axios.defaults.headers.common['X-Riot-Token'] = process.env.LoL_TOKEN;
 export const name = 'lolstats';
 export const description = 'View general stats from your previous 15 LoL matches';
 export function execute(message, args, client) {
-  message.channel.sendTyping(); // Used to allow bot to retrieve data from API calls while also showing user their input is being worked on
+	// Used to allow bot to retrieve data from API calls while also showing user their input is being worked on
+	message.channel.sendTyping();
 
-  const summonerName = args.join(' ');
+	const summonerName = args.join(' ');
 
-  // Request PUUID from API based on inputted summoner name
-  axios({
-    method: 'GET',
-    url: `https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/${summonerName}`,
-  })
-    .then((response) => {
-      handleStatsCheck(response, summonerName, client, message);
-    })
-    .catch((err) => {
-      console.log(err);
-      switch (err.response.status) {
-        case 404:
-          message.channel.send({ content: 'That character doesn\'t exist!' });
-          break;
-        case 429:
-          message.channel.send({
-            content: 'Riot\'s not talking to me right now.  Try again in two minutes.',
-          });
-          break;
-      }
-    });
+	// Request PUUID from API based on inputted summoner name
+	axios({
+		method: 'GET',
+		url: `https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/${summonerName}`,
+	})
+		.then((response) => {
+			handleStatsCheck(response, summonerName, client, message);
+		})
+		.catch((err) => {
+			console.log(err);
+			switch (err.response.status) {
+			case 404:
+				message.channel.send({ content: 'That character doesn\'t exist!' });
+				break;
+			case 429:
+				message.channel.send({
+					content: 'Riot\'s not talking to me right now.  Try again in two minutes.',
+				});
+				break;
+			}
+		});
 }
 
 const handleStatsCheck = (response, summonerName, client, message) => {
@@ -96,9 +97,7 @@ const handleStatsCheck = (response, summonerName, client, message) => {
 									champs[player.championName].count += 1;
 									champs[player.championName].timestamp =
                     match.data.info.gameEndTimestamp >
-                    champs[player.championName].timestamp
-                    	? match.data.info.gameEndTimestamp
-                    	: champs[player.championName].timestamp;
+                    champs[player.championName].timestamp ? match.data.info.gameEndTimestamp : champs[player.championName].timestamp;
 								}
 							}
 						});
@@ -143,8 +142,9 @@ const handleStatsCheck = (response, summonerName, client, message) => {
 				.setColor('#008A00')
 				.setDescription('Stats from the 15 most recent games')
 				.setThumbnail(
+					// This link may change
 					`http://ddragon.leagueoflegends.com/cdn/12.1.1/img/champion/${favChamp.name}.png`,
-				) // This link may change
+				)
 				.addFields(
 					{
 						name: '\u200B',

@@ -1,14 +1,13 @@
-import { SlashCommandBuilder } from "discord.js";
+import { SlashCommandBuilder } from 'discord.js';
 
 export const data = new SlashCommandBuilder()
-  .setName("ping")
-  .setDescription("Checks connectivity with discord's servers.");
+	.setName('ping')
+	.setDescription('Checks connectivity with discord\'s servers.');
 export async function execute(interaction, args) {
-  console.log("here");
-  await interaction.reply("Pinging...");
-  await interaction.editReply(
-    `PONG! Message round-trip took ${
-      Date.now() - interaction.createdTimestamp
-    }ms.`
-  );
+	await interaction.reply('Pinging...');
+	await interaction.editReply(
+		`PONG! Message round-trip took ${
+			Date.now() - interaction.createdTimestamp
+		}ms.`,
+	);
 }
