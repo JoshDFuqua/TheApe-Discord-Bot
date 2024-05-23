@@ -7,7 +7,7 @@
     "stop": "pm2 stop Discord_Bot"
   },
   "dependencies": {
-    "axios": "^0.24.0",
+    "axios": "^1.7.2",
     "cron": "^1.8.2",
     "discord.js": "14.5.0",
     "dotenv": "^12.0.4",
