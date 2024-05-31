@@ -1,10 +1,12 @@
-const fs = require('fs');
-const readline = require('readline');
-const { google } = require('googleapis');
-const { Base64 } = require('js-base64');
-const puppeteer = require('puppeteer');
-const Discord = require('discord.js');
-require('dotenv').config();
+import * as dotenv from 'dotenv';
+import fs from 'fs';
+import { EmbedBuilder } from 'discord.js';
+import readline from 'readline';
+import puppeteer from 'puppeteer';
+import { Base64 } from 'js-base64';
+import { google } from 'googleapis';
+
+dotenv.config();
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://mail.google.com'];
@@ -20,7 +22,7 @@ const serverHtmlPath = 'file:///home\\TheApe-Discord-Bot\\todayStory.html';
 const savedHtmlLocation =
   ENVIRONMENT === 'Local' ? localHtmlPath : serverHtmlPath;
 
-function getNews(client) {
+export function getNews(client) {
 	client.channels
 		.fetch('977325210376208415')
 		.then((channel) => {
@@ -81,7 +83,7 @@ function getNews(client) {
 									postArr.push({ name: '----------', value: postContent });
 								}
 								await browser.close();
-								const embed = new Discord.MessageEmbed()
+								const embed = new EmbedBuilder()
 									.setTitle('Daily News')
 									.addFields(...postArr)
 									.setFooter({
@@ -144,10 +146,14 @@ function authorize(credentials, callback) {
  * @param {google.auth.OAuth2} oAuth2Client The OAuth2 client to get token for.
  * @param {getEventsCallback} callback The callback for the authorized client.
  */
+
+// const state = crypto.getRandomValues();
 function getNewToken(oAuth2Client, callback) {
 	const authUrl = oAuth2Client.generateAuthUrl({
 		access_type: 'offline',
 		scope: SCOPES,
+		include_granted_scopes: true,
+		// state,
 	});
 	console.log('Authorize this app by visiting this url:', authUrl);
 	const rl = readline.createInterface({
@@ -168,7 +174,3 @@ function getNewToken(oAuth2Client, callback) {
 		});
 	});
 }
-
-// module.exports = {
-//   getNews,
-// };
