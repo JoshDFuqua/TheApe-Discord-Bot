@@ -1,13 +1,13 @@
 import model from './../models/GameSales.js';
 
-const addGame = async (title, price) => {
-	return await model.create({ title, current_price: price });
+const addGame = async (cheapSharkId, title) => {
+	return model.create({ cheapSharkId, title });
 };
-const findGame = async (title) => {
-	return await model.findById(title);
+const findGame = async (cheapSharkId) => {
+	return model.findOne({ cheapSharkId });
 };
-const removeGame = async (title) => {
-	return await model.findByIdAndDelete(title);
+const removeGame = async (cheapSharkId) => {
+	return model.deleteOne({ cheapSharkId });
 };
 
 export default { addGame, findGame, removeGame };

@@ -9,9 +9,14 @@ const gameSalesSchema = new Schema({
 		unique: true,
 		required: true,
 	},
+	cheapSharkId: {
+		type: Number,
+		index: true,
+		unique: true,
+		required: true,
+	},
 	current_price: {
 		type: Number,
-		required: true,
 	},
 });
 
