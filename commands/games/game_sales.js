@@ -36,95 +36,174 @@ export async function execute(interaction) {
 		modalResponse.reply({ content: 'Looking through my list of games...', ephemeral: true });
 		modalResponse.deleteReply();
 
+
+		let cheapSharkGames;
 		try {
-			const { data: cheapSharkGames } = await queryCheapSharkGames(gameTitle);
-			let sendGamesList;
-			if (cheapSharkGames.length <= 25) {
-				const gamesListSelect = createGamesListSelect(cheapSharkGames);
-				sendGamesList = await interaction.editReply({ components: gamesListSelect });
-			}
-			// Handles pagination
-			else {
-				let currentIndex = 0;
-				let gamesListSelect = createGamesListSelect(cheapSharkGames);
-				sendGamesList = await interaction.editReply({ components: gamesListSelect });
-
-				const buttonWatcher = sendGamesList.createMessageComponentCollector({ componentType: ComponentType.Button, time: 180000 });
-				buttonWatcher.on('collect', async i => {
-					i.deferUpdate();
-
-					if (i.customId === 'next') {
-						currentIndex += 25;
-					}
-					else {
-						currentIndex -= 25;
-					}
-					gamesListSelect = createGamesListSelect(cheapSharkGames, currentIndex);
-					sendGamesList = await interaction.editReply({ components: gamesListSelect });
-				});
-			}
-
-			const selectResponse = await sendGamesList.awaitMessageComponent({ filter: (i) => i.customId === 'games_list' && userFilter(i) });
-			const gameID = selectResponse.values[0];
-
-			const gameInDatabase = await checkDatabase(gameID);
-
-			selectResponse.reply({ content: 'Checking to see if we already have this one...', ephemeral: true });
-			selectResponse.deleteReply();
-
-			if (gameInDatabase) {
-				interaction.editReply({ content: 'That game is already being tracked!', components: [] });
-			}
-			else {
-				const [ gameInfo ] = cheapSharkGames.filter(g => g.gameID === gameID);
-				const saveSuccess = await saveToDatabase(gameInfo);
-				const responseMessage = saveSuccess ? 'Game is now being tracked.' : 'It seems I had a problem saving the game.  Try again later.';
-				interaction.editReply({ content: responseMessage, components: [] });
-			}
+			cheapSharkGames = await queryCheapSharkGames(gameTitle);
 		}
 		catch (e) {
+			interaction.editReply({ content: 'It appears the place I get all my info from is currently down.  Try again later.', components: [] });
+			console.log(e);
+			return;
+		}
+
+		if (cheapSharkGames.length === 0) {
+			interaction.editReply({ content: 'I didn\'t find anything by that name.  Check for any misspellings, make sure the game you\'re looking for actually exists, and try again!', components: [] });
+			return;
+		}
+
+		let sendGamesList;
+		if (cheapSharkGames.length <= 25) {
+			const GamesListSelect = createGamesListSelect(cheapSharkGames);
+			sendGamesList = await interaction.editReply({ components: GamesListSelect });
+		}
+		// Discord select menus can only hold 25 options at a time
+		else {
+			let currentIndex = 0;
+			let GamesListSelect = createGamesListSelect(cheapSharkGames);
+			sendGamesList = await interaction.editReply({ components: GamesListSelect });
+
+			const buttonWatcher = sendGamesList.createMessageComponentCollector({ componentType: ComponentType.Button, time: 180000 });
+			buttonWatcher.on('collect', async (i) => {
+				i.deferUpdate();
+
+				if (i.customId === 'next') {
+					currentIndex += 25;
+				}
+				else {
+					currentIndex -= 25;
+				}
+				GamesListSelect = createGamesListSelect(cheapSharkGames, currentIndex);
+				sendGamesList = await interaction.editReply({ components: GamesListSelect });
+			});
+		}
+		const selectResponse = await sendGamesList.awaitMessageComponent({ filter: (i) => i.customId === 'games_list' && userFilter(i) });
+		const cheapSharkId = selectResponse.values[0];
+
+		selectResponse.reply({ content: 'Checking to see if we already have this one...', ephemeral: true });
+		selectResponse.deleteReply();
+
+		let databaseResponse;
+		try {
+			databaseResponse = await checkDatabase(cheapSharkId);
+		}
+		catch (e) {
+			interaction.editReply({ content: 'I had some trouble talking to the database.  Try again later!', components: [] });
+			console.log(e);
+			return;
+		}
+
+		if (databaseResponse) {
+			interaction.editReply({ content: 'That game is already being tracked!', components: [] });
+		}
+		else {
+			const [ gameInfo ] = cheapSharkGames.filter(g => g.cheapSharkId === cheapSharkId);
+			try {
+				await saveToDatabase(gameInfo);
+				interaction.editReply({ content: 'Game is now being tracked.', components: [] });
+			}
+			catch (e) {
+				interaction.editReply({ content: 'It seems I had a problem saving the game.  Try again later!', components: [] });
+				console.log(e);
+			}
+		}
+	}
+	else {
+		menuResponse.reply({ content: 'Checking the database...', components: [] });
+		menuResponse.deleteReply();
+
+		let games;
+		try {
+			games = await checkDatabase();
+		}
+		catch (e) {
+			interaction.editReply({ content: 'I had some trouble talking to the database.  Try again later!', components: [] });
 			console.log(e);
 		}
 
-	}
-	else {
-		console.log('else');
+		if (games.length === 0) {
+			interaction.editReply({ content: 'I\'m not tracking anything!', components: [] });
+			return;
+		}
+
+		const GamesListSelect = createGamesListSelect(games);
+		const sendGamesList = await interaction.editReply({ components: GamesListSelect });
+		const selectResponse = await sendGamesList.awaitMessageComponent({ filter: (i) => i.customId === 'games_list' && userFilter(i) });
+		const cheapSharkId = selectResponse.values[0];
+
+		selectResponse.reply({ content: 'Deleting game...', ephemeral: true });
+		selectResponse.deleteReply();
+
+		try {
+			await deleteGame(cheapSharkId);
+			interaction.editReply({ content: 'Game has been deleted.', components: [] });
+		}
+		catch (e) {
+			interaction.editReply({ content: 'It seems I had a problem deleting the game.  Try again later!', components: [] });
+			console.log(e);
+		}
 	}
 }
+
+/* ********* */
+/* Utilities */
+/* ********* */
+const normalizeCheapSharkData = (cheapSharkData) => {
+	return cheapSharkData.map((game) => {
+		return {
+			cheapSharkId: game.gameID,
+			title: game.external,
+		};
+	});
+};
 
 /* ********* */
 /* API Calls */
 /* ********* */
 const queryCheapSharkGames = async (title) => {
-	return axios.get(`https://www.cheapshark.com/api/1.0/games?title=${title}`);
+	const response = await axios.get(
+		`https://www.cheapshark.com/api/1.0/games?title=${title}`,
+		{
+		});
+	return normalizeCheapSharkData(response.data);
 };
 
-const checkDatabase = async (gameID) => {
+/* ************ */
+/* Server Calls */
+/* ************ */
+const endpoint = 'http://localhost:3001/api/gamesales';
+const checkDatabase = async (cheapSharkId = '') => {
 	const response = await axios.get(
-		'http://localhost:3001/api/gamesales',
+		endpoint,
 		{
 			params: {
-				gameID,
+				cheapSharkId,
 			},
-			validateStatus: false,
 		});
-
-	return response.status === 200;
+	return response.data;
 };
 
-const saveToDatabase = async ({ gameID, external: title }) => {
-	const response = await axios.post(
-		'http://localhost:3001/api/gamesales',
+const saveToDatabase = async ({ cheapSharkId, title }) => {
+	await axios.post(
+		endpoint,
 		null,
 		{
 			params: {
-				gameID,
+				cheapSharkId,
 				title,
 			},
-			validateStatus: false,
 		});
+};
 
-	return response.status === 201;
+const deleteGame = async (cheapSharkId) => {
+	await axios.delete(
+		endpoint,
+		{
+			params: {
+				cheapSharkId,
+			},
+		},
+	);
 };
 
 /* ********** */
@@ -170,11 +249,11 @@ const createGamesListSelect = (games, currentIndex = 0) => {
 		.setPlaceholder('Select the correct title');
 	const gamesSelectOptions = [];
 
-	currentGamesListSection.forEach(({ gameID, external: title }) => {
+	currentGamesListSection.forEach(({ cheapSharkId, title }) => {
 		gamesSelectOptions.push(
 			new StringSelectMenuOptionBuilder()
 				.setLabel(title)
-				.setValue(gameID),
+				.setValue(`${cheapSharkId}`),
 		);
 	});
 	gamesSelect.addOptions(gamesSelectOptions);
