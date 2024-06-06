@@ -9,5 +9,13 @@ const findGame = async (cheapSharkId) => {
 const removeGame = async (cheapSharkId) => {
 	return model.deleteOne({ cheapSharkId });
 };
+const retrieveAll = async () => {
+	return model.find();
+};
 
-export default { addGame, findGame, removeGame };
+export default {
+	addGame,
+	findGame,
+	removeGame,
+	retrieveAll,
+};

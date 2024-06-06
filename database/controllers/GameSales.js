@@ -1,13 +1,25 @@
 import service from '../services/GameSales.js';
 
-	const { gameID, title } = req.query;
-	try {
-		await service.addGame(gameID, title);
-		res.status(201).end();
 const handleGet = async (req, res) => {
+	const { cheapSharkId } = req.query;
+
+	if (cheapSharkId) {
+		try {
+			const game = await service.findGame(cheapSharkId);
+			res.status(200).json(game);
+		}
+		catch (err) {
+			res.status(500).json({ error: err.message });
+		}
 	}
-	catch (err) {
-		res.status(500).json({ error: err.message });
+	else {
+		try {
+			const games = await service.retrieveAll();
+			res.status(200).json(games);
+		}
+		catch (err) {
+			res.status(500).json({ error: err.message });
+		}
 	}
 };
 const handlePost = async (req, res) => {
