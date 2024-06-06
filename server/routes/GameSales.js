@@ -1,10 +1,10 @@
 import express from 'express';
 import controller from '../../database/controllers/GameSales.js';
 
-const { addGame, findGame, removeGame } = controller;
+const { handleGet, handlePost, handleDelete } = controller;
 
 const router = express.Router();
 
-router.route('/').get(findGame).post(addGame).delete(removeGame);
+router.route('/').get(handleGet).post(handlePost).delete(handleDelete);
 
 export default router;
