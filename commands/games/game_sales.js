@@ -1,6 +1,8 @@
 import * as dotenv from 'dotenv';
+import * as controller from '../../database/controllers/GameSales.js';
 import axios from 'axios';
 import { ComponentType } from 'discord.js';
+import { connectToDatabase, closeDatabaseConnection } from '../../utilities.js';
 import {
 	ButtonStyle,
 	ModalBuilder,
@@ -21,6 +23,14 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction) {
 	const userFilter = i => i.user.id === interaction.user.id;
+
+	try {
+		await connectToDatabase();
+	}
+	catch (e) {
+		console.log(e);
+		return;
+	}
 
 	const MainMenu = createMainMenu();
 	const sendMenu = await interaction.reply({
@@ -85,9 +95,10 @@ export async function execute(interaction) {
 
 		let databaseResponse;
 		try {
-			databaseResponse = await checkDatabase(cheapSharkId);
+			databaseResponse = await controller.findGame(cheapSharkId);
 		}
 		catch (e) {
+			closeDatabaseConnection();
 			interaction.editReply({ content: 'I had some trouble talking to the database.  Try again later!', components: [] });
 			console.log(e);
 			return;
@@ -95,16 +106,20 @@ export async function execute(interaction) {
 
 		if (databaseResponse) {
 			interaction.editReply({ content: 'That game is already being tracked!', components: [] });
+			return;
 		}
 		else {
 			const [ gameInfo ] = cheapSharkGames.filter(g => g.cheapSharkId === cheapSharkId);
 			try {
-				await saveToDatabase(gameInfo);
+				await controller.addGame(gameInfo.cheapSharkId, gameInfo.title);
 				interaction.editReply({ content: 'Game is now being tracked.', components: [] });
+				return;
 			}
 			catch (e) {
+				closeDatabaseConnection();
 				interaction.editReply({ content: 'It seems I had a problem saving the game.  Try again later!', components: [] });
 				console.log(e);
+				return;
 			}
 		}
 	}
@@ -114,18 +129,19 @@ export async function execute(interaction) {
 
 		let games;
 		try {
-			games = await checkDatabase();
+			games = await controller.retrieveAll();
 		}
 		catch (e) {
+			closeDatabaseConnection();
 			interaction.editReply({ content: 'I had some trouble talking to the database.  Try again later!', components: [] });
 			console.log(e);
+			return;
 		}
 
 		if (games.length === 0) {
 			interaction.editReply({ content: 'I\'m not tracking anything!', components: [] });
 			return;
 		}
-
 		const GamesListSelect = createGamesListSelect(games);
 		const sendGamesList = await interaction.editReply({ components: GamesListSelect });
 		const selectResponse = await sendGamesList.awaitMessageComponent({ filter: (i) => i.customId === 'games_list' && userFilter(i) });
@@ -135,12 +151,15 @@ export async function execute(interaction) {
 		selectResponse.deleteReply();
 
 		try {
-			await deleteGame(cheapSharkId);
+			await controller.removeGame(cheapSharkId);
 			interaction.editReply({ content: 'Game has been deleted.', components: [] });
+			return;
 		}
 		catch (e) {
+			closeDatabaseConnection();
 			interaction.editReply({ content: 'It seems I had a problem deleting the game.  Try again later!', components: [] });
 			console.log(e);
+			return;
 		}
 	}
 }
@@ -166,44 +185,6 @@ const queryCheapSharkGames = async (title) => {
 		{
 		});
 	return normalizeCheapSharkData(response.data);
-};
-
-/* ************ */
-/* Server Calls */
-/* ************ */
-const endpoint = 'http://localhost:3001/api/gamesales';
-const checkDatabase = async (cheapSharkId = '') => {
-	const response = await axios.get(
-		endpoint,
-		{
-			params: {
-				cheapSharkId,
-			},
-		});
-	return response.data;
-};
-
-const saveToDatabase = async ({ cheapSharkId, title }) => {
-	await axios.post(
-		endpoint,
-		null,
-		{
-			params: {
-				cheapSharkId,
-				title,
-			},
-		});
-};
-
-const deleteGame = async (cheapSharkId) => {
-	await axios.delete(
-		endpoint,
-		{
-			params: {
-				cheapSharkId,
-			},
-		},
-	);
 };
 
 /* ********** */
