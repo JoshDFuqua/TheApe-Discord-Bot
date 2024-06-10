@@ -1,21 +1,14 @@
 import model from './../models/GameSales.js';
 
-const addGame = async (cheapSharkId, title) => {
+export const addGame = async (cheapSharkId, title) => {
 	return model.create({ cheapSharkId, title });
 };
-const findGame = async (cheapSharkId) => {
+export const findGame = async (cheapSharkId) => {
 	return model.findOne({ cheapSharkId });
 };
-const removeGame = async (cheapSharkId) => {
+export const removeGame = async (cheapSharkId) => {
 	return model.deleteOne({ cheapSharkId });
 };
-const retrieveAll = async () => {
+export const retrieveAll = async () => {
 	return model.find();
-};
-
-export default {
-	addGame,
-	findGame,
-	removeGame,
-	retrieveAll,
 };
