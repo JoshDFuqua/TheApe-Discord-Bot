@@ -1,24 +1,24 @@
-const Discord = require("discord.js");
-const config = require("./config");
-const fs = require("fs");
-const client = new Discord.Client({
+import dotenv from "dotenv";
+import { readdirSync } from "fs";
+import { Client, GatewayIntentBits, Collection, REST } from "discord.js";
+const client = new Client({
   intents: [
-    Discord.Intents.FLAGS.GUILDS,
-    Discord.Intents.FLAGS.GUILD_BANS,
-    Discord.Intents.FLAGS.GUILD_EMOJIS_AND_STICKERS,
-    Discord.Intents.FLAGS.GUILD_INTEGRATIONS,
-    Discord.Intents.FLAGS.GUILD_WEBHOOKS,
-    Discord.Intents.FLAGS.GUILD_INVITES,
-    Discord.Intents.FLAGS.GUILD_VOICE_STATES,
-    Discord.Intents.FLAGS.GUILD_MESSAGES,
-    Discord.Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
-    Discord.Intents.FLAGS.GUILD_MESSAGE_TYPING,
-    Discord.Intents.FLAGS.DIRECT_MESSAGES,
-    Discord.Intents.FLAGS.DIRECT_MESSAGE_REACTIONS,
-    Discord.Intents.FLAGS.DIRECT_MESSAGE_TYPING,
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildBans,
+    GatewayIntentBits.GuildEmojisAndStickers,
+    GatewayIntentBits.GuildIntegrations,
+    GatewayIntentBits.GuildWebhooks,
+    GatewayIntentBits.GuildInvites,
+    GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildMessageReactions,
+    GatewayIntentBits.GuildMessageTyping,
+    GatewayIntentBits.DirectMessages,
+    GatewayIntentBits.DirectMessageReactions,
+    GatewayIntentBits.DirectMessageTyping,
   ],
   presence: {
-    status: "online",
+    status: 'online',
     activities: [
       {
         name: "you",
@@ -27,37 +27,39 @@ const client = new Discord.Client({
     ],
   },
 });
-require("dotenv").config();
+dotenv.config();
 const token = process.env.TOKEN;
-const { CronJob } = require("cron");
+import { CronJob } from "cron";
+
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
+import { main } from "./bot_services/check-game-sales.js";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /*
- * Creates properties on the client object that contain access to the various command and button files
+ * Creates property on the client object that contain access to the various command files
  */
-const commandFolders = fs.readdirSync("./commands");
+client.commands = new Collection();
+const foldersPath = join(__dirname, 'commands')
+  // "E:\\Users\\joshd\\Documents\\GitHub\\TheApe-Discord-Bot\\commands";
+const commandFolders = readdirSync(foldersPath);
 
-client.commands = new Discord.Collection();
-for (let folder of commandFolders) {
-  let commandFiles = fs
-    .readdirSync(`./commands/${folder}`)
-    .filter((file) => file.endsWith(".js"));
-  for (let file of commandFiles) {
-    const command = require(`./commands/${folder}/${file}`);
-    client.commands.set(command.name, command);
-  }
-}
-client.buttons = new Discord.Collection();
-for (let folder of commandFolders) {
-  let commandFiles = fs
-    .readdirSync(`./commands/${folder}`)
-    .filter((file) => !file.endsWith(".js"));
-  for (let buttonFolder of commandFiles) {
-    let buttonFiles = fs
-      .readdirSync(`./commands/${folder}/${buttonFolder}`)
-      .filter((file) => file.endsWith(".js"));
-    for (let file of buttonFiles) {
-      const button = require(`./commands/${folder}/${buttonFolder}/${file}`);
-      client.buttons.set(button.name, button);
+for (const folder of commandFolders) {
+  const commandsPath = join(foldersPath, folder);
+  const commandFiles = readdirSync(commandsPath).filter((file) =>
+    file.endsWith(".js")
+  );
+  for (const file of commandFiles) {
+    const filePath = join(commandsPath, file);
+    const command = await import(`file://${filePath}`);
+    // Set a new item in the Collection with the key as the command name and the value as the exported module
+    if ("data" in command && "execute" in command) {
+      client.commands.set(command.data.name, command);
+    } else {
+      console.log(
+        `[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`
+      );
     }
   }
 }
@@ -67,43 +69,88 @@ for (let folder of commandFolders) {
  */
 client.on("ready", () => console.log(`Logged in as ${client.user.tag}.`));
 
-client.on("messageCreate", async (message) => {
-  if (message.author.id === client.user.id) {
-    client.user.lastMessageID = message.id;
+// client.on("messageCreate", async (message) => {
+//   console.log(message);
+//   if (message.author.id === client.user.id) {
+//     client.user.lastMessageID = message.id;
+//   }
+//   if (message.content.startsWith(config.prefix)) {
+//     let args = message.content.slice(config.prefix.length).split(" ");
+//     let command = args.shift().toLowerCase();
+
+//     if (!client.commands.has(command)) return;
+
+//     try {
+//       client.commands.get(command).execute(message, args, client);
+//     } catch (error) {
+//       console.error(error);
+//       message.reply("There was an error trying to execute that command!");
+//     }
+//   }
+// });
+
+// Construct and prepare an instance of the REST module
+const rest = new REST().setToken(token);
+
+// and deploy your commands!
+// (async () => {
+//   try {
+//     console.log(
+//       `Started refreshing ${client.commands.length} application (/) commands.`
+//     );
+
+//     // The put method is used to fully refresh all commands in the guild with the current set
+//     const data = await rest.put(
+//       Discord.Routes.applicationCommands("813957126912213012"),
+//       { body: client.commands }
+//     );
+
+//     console.log(
+//       `Successfully reloaded ${data.length} application (/) commands.`
+//     );
+//   } catch (error) {
+//     // And of course, make sure you catch and log any errors!
+//     console.error(error);
+//   }
+// })();
+
+client.on("interactionCreate", async (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
+
+  const command = interaction.client.commands.get(interaction.commandName);
+
+  if (!command) {
+    console.error(`No command matching ${interaction.commandName} was found.`);
+    return;
   }
-  if (message.content.startsWith(config.prefix)) {
-    let args = message.content.slice(config.prefix.length).split(" ");
-    let command = args.shift().toLowerCase();
 
-    if (!client.commands.has(command)) return;
-
-    try {
-      client.commands.get(command).execute(message, args, client);
-    } catch (error) {
-      console.error(error);
-      message.reply("There was an error trying to execute that command!");
+  try {
+    await command.execute(interaction);
+  } catch (error) {
+    console.error(error);
+    if (interaction.replied || interaction.deferred) {
+      await interaction.followUp({
+        content: "There was an error while executing this command!",
+        ephemeral: true,
+      });
+    } else {
+      await interaction.reply({
+        content: "There was an error while executing this command!",
+        ephemeral: true,
+      });
     }
   }
 });
 
-client.on("interactionCreate", async (button) => {
-  let buttonID = button.customId;
-  if (!client.buttons.has(buttonID)) return;
-  try {
-    client.buttons.get(buttonID).execute(button, client);
-  } catch (error) {
-    console.log(error);
-  }
-});
+// let { getNews } = require("./commands/resources/news.js");
+// let postNews = new CronJob(
+//   "00 00 12 * * 1-5", // Post Monday thru Friday, at 12pm
+//   () => getNews(client),
+//   null,
+//   false,
+//   "America/New_York"
+// );
+// postNews.start();
 
-let { getNews } = require("./commands/resources/news.js");
-let postNews = new CronJob(
-  "00 00 12 * * 1-5", // Post Monday thru Friday, at 12pm
-  () => getNews(client),
-  null,
-  false,
-  "America/New_York"
-);
-postNews.start();
-
-client.login(token);
+await client.login(token);
+await main();
