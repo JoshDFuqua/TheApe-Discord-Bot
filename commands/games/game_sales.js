@@ -1,12 +1,12 @@
 import * as dotenv from 'dotenv';
 import * as controller from '../../database/controllers/GameSales.js';
 import axios from 'axios';
-import { ComponentType } from 'discord.js';
 import { connectToDatabase, closeDatabaseConnection } from '../../utilities.js';
 import {
 	ButtonStyle,
 	ModalBuilder,
 	ButtonBuilder,
+	ComponentType,
 	TextInputStyle,
 	ActionRowBuilder,
 	TextInputBuilder,

@@ -9,6 +9,9 @@ export const findGame = async (cheapSharkId) => {
 export const removeGame = async (cheapSharkId) => {
 	return model.deleteOne({ cheapSharkId });
 };
+export const updateGame = async (cheapSharkId, update) => {
+	return model.findOneAndUpdate({ cheapSharkId }, update);
+};
 export const retrieveAll = async () => {
 	return model.find();
 };

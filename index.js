@@ -33,6 +33,7 @@ import { CronJob } from "cron";
 
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
+import { main } from "./bot_services/check-game-sales.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -152,3 +153,4 @@ client.on("interactionCreate", async (interaction) => {
 // postNews.start();
 
 await client.login(token);
+await main();
