@@ -1,6 +1,7 @@
-*.env
-node_modules
-credentials.json
-token.json
-todayStory.html
-commands/resources/todayStory.html
+bin/
+obj/
+.env
+.vscode/
+.vs/
+.user
+.suo
