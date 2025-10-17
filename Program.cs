@@ -1,2 +1,12 @@
-﻿// See https://aka.ms/new-console-template for more information
-Console.WriteLine("Hello, World!");
+﻿using Microsoft.Extensions.Hosting;
+using NetCord.Hosting.Gateway;
+using DotNetEnv;
+
+Env.Load();
+
+var builder = Host.CreateApplicationBuilder();
+builder.Services.AddDiscordGateway();
+
+var host = builder.Build();
+await host.RunAsync();
+
